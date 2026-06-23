@@ -1,0 +1,40 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: ai_project_platform
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: "postgresql://postgres:postgres@postgres:5432/ai_project_platform?schema=public"
+      NEXTAUTH_SECRET: "dev-secret-change-in-production"
+      NEXTAUTH_URL: "http://localhost:3000"
+      AGENT_SERVICE_URL: "http://agents:8000"
+    depends_on:
+      - postgres
+      - agents
+
+  agents:
+    build:
+      context: ./agents
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      ANTHROPIC_API_KEY: "${ANTHROPIC_API_KEY}"
+
+volumes:
+  pgdata:
