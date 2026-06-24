@@ -58,11 +58,10 @@ const initialRoutines: Routine[] = [
       { id: "s6", order: 6, title: "Desayuno nutritivo", estimatedMinutes: 15 },
     ],
     executions: [
-      { id: "e1", date: "2025-01-20", status: "COMPLETED" },
-      { id: "e2", date: "2025-01-21", status: "COMPLETED" },
-      { id: "e3", date: "2025-01-22", status: "PARTIAL", notes: "Salté el yoga" },
-      { id: "e4", date: "2025-01-23", status: "COMPLETED" },
-      { id: "e5", date: "2025-01-24", status: "SKIPPED", notes: "Reunión temprano" },
+      { id: "e1", date: new Date(Date.now() - 4 * 86400000).toISOString().slice(0, 10), status: "COMPLETED" },
+      { id: "e2", date: new Date(Date.now() - 3 * 86400000).toISOString().slice(0, 10), status: "COMPLETED" },
+      { id: "e3", date: new Date(Date.now() - 2 * 86400000).toISOString().slice(0, 10), status: "PARTIAL", notes: "Salté el yoga" },
+      { id: "e4", date: new Date(Date.now() - 1 * 86400000).toISOString().slice(0, 10), status: "COMPLETED" },
     ],
   },
   {
@@ -72,17 +71,17 @@ const initialRoutines: Routine[] = [
       { id: "s7", order: 1, title: "Calentamiento: 5 min cardio suave + movilidad articular", estimatedMinutes: 8 },
       { id: "s7b", order: 2, title: "Activación: puentes de cadera + band pulls", estimatedMinutes: 3 },
       { id: "s7c", order: 3, title: "Series de activación: 1-2 series al 40-50% del peso", estimatedMinutes: 3 },
-      { id: "s8", order: 4, title: "Sentadilla con barra 3x8-10 (60-65% 1RM) — 2 min descanso", estimatedMinutes: 10 },
-      { id: "s9", order: 5, title: "Press banca con barra 3x8-10 (60-65% 1RM) — 2 min descanso", estimatedMinutes: 10 },
-      { id: "s10", order: 6, title: "Remo con barra inclinado 3x8-10 (60-65% 1RM) — 2 min descanso", estimatedMinutes: 10 },
-      { id: "s11", order: 7, title: "Plancha frontal 3x30s — 1 min descanso", estimatedMinutes: 5 },
+      { id: "s8", order: 4, title: "Sentadilla con barra 3x8-10 (60-65% 1RM) — 2 min descanso", description: "Pies a la anchura de hombros, rodillas hacia afuera, ROM completo a paralelo. Inhala abajo, exhala arriba. Tempo 3-1-1.", estimatedMinutes: 10 },
+      { id: "s9", order: 5, title: "Press banca con barra 3x8-10 (60-65% 1RM) — 2 min descanso", description: "Escápulas retraídas, arco dorsal ligero, codos a 45–75°. Inhala al bajar, exhala al empujar.", estimatedMinutes: 10 },
+      { id: "s10", order: 6, title: "Remo con barra inclinado 3x8-10 (60-65% 1RM) — 2 min descanso", description: "Torso a 45°, tirón al ombligo, squeeze 1s en contracción máxima. Espalda neutra siempre.", estimatedMinutes: 10 },
+      { id: "s11", order: 7, title: "Plancha frontal 3x30s — 1 min descanso", description: "Cuerpo recto como tabla, glúteos apretados, respiración constante. No saques cadera arriba.", estimatedMinutes: 5 },
       { id: "s12", order: 8, title: "Enfriamiento: estiramientos estáticos 30s/posición", estimatedMinutes: 5 },
       { id: "s13", order: 9, title: "Respiración profunda / down-regulate", estimatedMinutes: 3 },
     ],
     executions: [
-      { id: "e6", date: "2025-01-20", status: "COMPLETED" },
-      { id: "e7", date: "2025-01-22", status: "COMPLETED" },
-      { id: "e8", date: "2025-01-24", status: "PARTIAL", notes: "Solo upper body" },
+      { id: "e6", date: new Date(Date.now() - 5 * 86400000).toISOString().slice(0, 10), status: "COMPLETED" },
+      { id: "e7", date: new Date(Date.now() - 3 * 86400000).toISOString().slice(0, 10), status: "COMPLETED" },
+      { id: "e8", date: new Date(Date.now() - 1 * 86400000).toISOString().slice(0, 10), status: "PARTIAL", notes: "Solo upper body" },
     ],
   },
   {
@@ -92,10 +91,10 @@ const initialRoutines: Routine[] = [
       { id: "s30", order: 1, title: "Calentamiento: 5 min cardio suave + movilidad articular", estimatedMinutes: 8 },
       { id: "s31", order: 2, title: "Activación: puentes de cadera + band pulls", estimatedMinutes: 3 },
       { id: "s32", order: 3, title: "Series de activación: 1-2 series al 40-50% del peso", estimatedMinutes: 3 },
-      { id: "s33", order: 4, title: "Peso muerto con barra 3x6-8 (60-65% 1RM) — 3 min descanso", estimatedMinutes: 12 },
-      { id: "s34", order: 5, title: "Press militar con mancuernas 3x8-10 (60-65% 1RM) — 2 min descanso", estimatedMinutes: 10 },
-      { id: "s35", order: 6, title: "Jalón al pecho o dominadas asistidas 3x8-10 — 2 min descanso", estimatedMinutes: 10 },
-      { id: "s36", order: 7, title: "Zancadas con peso corporal 3x10 c/pierna — 1.5 min descanso", estimatedMinutes: 8 },
+      { id: "s33", order: 4, title: "Peso muerto con barra 3x6-8 (60-65% 1RM) — 3 min descanso", description: "Barra pegada al cuerpo, cadera atrás, espalda neutra. Nunca redondees lumbar. Inhala antes de levantar.", estimatedMinutes: 12 },
+      { id: "s34", order: 5, title: "Press militar con mancuernas 3x8-10 (60-65% 1RM) — 2 min descanso", description: "Core apretado, no extiendas lumbar para ayudar. Empuje vertical puro. Exhala arriba.", estimatedMinutes: 10 },
+      { id: "s35", order: 6, title: "Jalón al pecho o dominadas asistidas 3x8-10 — 2 min descanso", description: "Pecho hacia la barra, agarre ligeramente más ancho que hombros. Squeeze de dorsales abajo.", estimatedMinutes: 10 },
+      { id: "s36", order: 7, title: "Zancadas con peso corporal 3x10 c/pierna — 1.5 min descanso", description: "Rodilla delantera no sobrepasa punta del pie, torso erecto. Baja controlado (2s).", estimatedMinutes: 8 },
       { id: "s37", order: 8, title: "Enfriamiento: estiramientos estáticos 30s/posición", estimatedMinutes: 5 },
       { id: "s38", order: 9, title: "Respiración profunda / down-regulate", estimatedMinutes: 3 },
     ],
@@ -201,11 +200,10 @@ const initialRoutines: Routine[] = [
       { id: "s18", order: 5, title: "Contorno de ojos", estimatedMinutes: 1 },
     ],
     executions: [
-      { id: "e9", date: "2025-01-20", status: "COMPLETED" },
-      { id: "e10", date: "2025-01-21", status: "COMPLETED" },
-      { id: "e11", date: "2025-01-22", status: "COMPLETED" },
-      { id: "e12", date: "2025-01-23", status: "COMPLETED" },
-      { id: "e13", date: "2025-01-24", status: "COMPLETED" },
+      { id: "e9", date: new Date(Date.now() - 4 * 86400000).toISOString().slice(0, 10), status: "COMPLETED" },
+      { id: "e10", date: new Date(Date.now() - 3 * 86400000).toISOString().slice(0, 10), status: "COMPLETED" },
+      { id: "e11", date: new Date(Date.now() - 2 * 86400000).toISOString().slice(0, 10), status: "COMPLETED" },
+      { id: "e12", date: new Date(Date.now() - 1 * 86400000).toISOString().slice(0, 10), status: "COMPLETED" },
     ],
   },
   {
@@ -220,8 +218,8 @@ const initialRoutines: Routine[] = [
       { id: "s24", order: 6, title: "Revisión: qué logré, qué sigue", estimatedMinutes: 5 },
     ],
     executions: [
-      { id: "e14", date: "2025-01-22", status: "COMPLETED" },
-      { id: "e15", date: "2025-01-23", status: "COMPLETED" },
+      { id: "e14", date: new Date(Date.now() - 2 * 86400000).toISOString().slice(0, 10), status: "COMPLETED" },
+      { id: "e15", date: new Date(Date.now() - 1 * 86400000).toISOString().slice(0, 10), status: "COMPLETED" },
     ],
   },
 ];
@@ -286,7 +284,7 @@ export default function RoutinesPage() {
   }
 
   function getAdherence(r: Routine) {
-    if (r.executions.length === 0) return 0;
+    if (r.executions.length === 0) return -1; // -1 means no data
     const completed = r.executions.filter(e => e.status === "COMPLETED").length;
     return Math.round((completed / r.executions.length) * 100);
   }
@@ -356,8 +354,11 @@ export default function RoutinesPage() {
           const cfg = categoryConfig[routine.category];
           const adherence = getAdherence(routine);
           const totalMin = getTotalMinutes(routine.steps);
+          const todayName = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"][new Date().getDay()];
+          const isToday = routine.daysOfWeek.includes(todayName);
           return (
-            <button key={routine.id} onClick={() => { setSelectedRoutine(routine); setActiveTab("steps"); setExecutingSteps(new Set()); }} className="rounded-xl border bg-card p-4 text-left hover:border-primary/30 hover:shadow-md transition-all group">
+            <button key={routine.id} onClick={() => { setSelectedRoutine(routine); setActiveTab("steps"); setExecutingSteps(new Set()); }} className={`rounded-xl border bg-card p-4 text-left hover:border-primary/30 hover:shadow-md transition-all group ${isToday ? "ring-2 ring-primary/20" : ""}`}>
+              {isToday && <span className="inline-block mb-1.5 rounded-full bg-primary/10 text-primary px-2 py-0.5 text-[9px] font-semibold">🟢 Hoy</span>}
               <div className="flex items-start justify-between">
                 <div className="flex items-start gap-3">
                   <span className="text-2xl">{cfg.emoji}</span>
@@ -371,7 +372,7 @@ export default function RoutinesPage() {
               <div className="flex items-center gap-4 text-xs text-muted-foreground">
                 <span className="flex items-center gap-1"><CheckCircle2 className="h-3 w-3" />{routine.steps.length} pasos</span>
                 <span className="flex items-center gap-1"><Timer className="h-3 w-3" />{totalMin} min</span>
-                <span className="flex items-center gap-1"><BarChart3 className="h-3 w-3" />{adherence}% adherencia</span>
+                <span className="flex items-center gap-1"><BarChart3 className="h-3 w-3" />{adherence < 0 ? "—" : `${adherence}%`} adherencia</span>
                 <Link href={`/brain?topic=${cfg.topicSlug}`} onClick={e => e.stopPropagation()} className="flex items-center gap-1 text-primary hover:underline">
                   <Brain className="h-3 w-3" />Brain
                 </Link>
@@ -450,7 +451,7 @@ export default function RoutinesPage() {
                     </div>
                     <div className="space-y-2">
                       {selectedRoutine.steps.map(step => (
-                        <button key={step.id} onClick={() => toggleStep(step.id)} className={`w-full flex items-center gap-3 rounded-lg border p-3 text-left transition-all ${executingSteps.has(step.id) ? "bg-green-100 border-green-200" : "hover:bg-accent/50"}`}>
+                        <button key={step.id} onClick={() => toggleStep(step.id)} className={`w-full flex items-center gap-3 rounded-lg border p-3 text-left transition-all active:scale-[0.98] ${executingSteps.has(step.id) ? "bg-green-100 border-green-200 dark:bg-green-900/20 dark:border-green-800" : "hover:bg-accent/50 active:bg-accent"}`}>
                           {executingSteps.has(step.id) ? <CheckCircle2 className="h-5 w-5 text-green-600 shrink-0" /> : <Circle className="h-5 w-5 text-gray-400 shrink-0" />}
                           <span className={`text-sm ${executingSteps.has(step.id) ? "line-through text-muted-foreground" : "font-medium"}`}>{step.title}</span>
                           {step.estimatedMinutes && <span className="ml-auto text-xs text-muted-foreground">{step.estimatedMinutes}m</span>}
@@ -466,13 +467,22 @@ export default function RoutinesPage() {
 
                 {activeTab === "stats" && (
                   <div className="p-5 space-y-5">
+                    {selectedRoutine.executions.length === 0 ? (
+                      <div className="text-center py-10 space-y-3">
+                        <Play className="h-10 w-10 text-muted-foreground/30 mx-auto" />
+                        <p className="text-sm font-medium text-muted-foreground">Sin ejecuciones aún</p>
+                        <p className="text-xs text-muted-foreground">Ejecuta esta rutina por primera vez para ver estadísticas.</p>
+                        <button onClick={() => setActiveTab("execute")} className="rounded-lg bg-primary px-4 py-2 text-sm text-primary-foreground hover:bg-primary/90">Iniciar primera ejecución</button>
+                      </div>
+                    ) : (
+                      <>
                     <div className="grid grid-cols-3 gap-3">
                       <div className="rounded-xl border p-3 text-center">
                         <p className="text-2xl font-bold">{selectedRoutine.executions.length}</p>
                         <p className="text-[10px] text-muted-foreground">Ejecuciones</p>
                       </div>
                       <div className="rounded-xl border p-3 text-center">
-                        <p className="text-2xl font-bold text-green-600">{getAdherence(selectedRoutine)}%</p>
+                        <p className="text-2xl font-bold text-green-600">{getAdherence(selectedRoutine) < 0 ? "—" : `${getAdherence(selectedRoutine)}%`}</p>
                         <p className="text-[10px] text-muted-foreground">Adherencia</p>
                       </div>
                       <div className="rounded-xl border p-3 text-center">
@@ -495,11 +505,20 @@ export default function RoutinesPage() {
                       </div>
                     </div>
 
-                    {getAdherence(selectedRoutine) < 70 && (
+                    {getAdherence(selectedRoutine) < 70 && selectedRoutine.executions.length > 0 && (
                       <div className="rounded-xl bg-amber-100 border border-amber-200 p-3">
                         <p className="text-xs font-medium text-amber-800 flex items-center gap-1.5"><Sparkles className="h-3.5 w-3.5" />Sugerencia IA</p>
                         <p className="text-xs text-amber-700 mt-1">Tu adherencia está por debajo del 70%. Considera reducir la cantidad de pasos o ajustar el horario para mejorar la consistencia.</p>
                       </div>
+                    )}
+
+                    {selectedRoutine.category === "WORKOUT" && (
+                      <div className="rounded-xl border border-green-200 bg-green-50 p-3">
+                        <p className="text-xs font-medium text-green-800">🥗 Recordatorio nutricional post-entreno</p>
+                        <p className="text-xs text-green-700 mt-1">Proteína: 0.4–0.5 g/kg en los 2h post-entreno. Caseína 20–40g antes de dormir. Hidratación: 500ml extra en días de entrenamiento.</p>
+                      </div>
+                    )}
+                      </>
                     )}
                   </div>
                 )}
