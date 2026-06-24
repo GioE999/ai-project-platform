@@ -17,13 +17,14 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  tasks         Task[]
-  projects      Project[]
-  notes         Note[]
-  messages      Message[]
-  meetings      Meeting[] @relation("MeetingOrganizer")
-  agentLogs     AgentLog[]
-  routines      Routine[]
+  tasks          Task[]
+  projects       Project[]
+  notes          Note[]
+  messages       Message[]
+  meetings       Meeting[] @relation("MeetingOrganizer")
+  agentLogs      AgentLog[]
+  routines       Routine[]
+  knowledgeNotes KnowledgeNote[]
 
   @@map("users")
 }
@@ -260,18 +261,145 @@ model AgentLog {
 // ─── Topics (Second Brain Themes) ─────────────────────────────────
 
 model Topic {
-  id        String   @id @default(cuid())
-  name      String   @unique
-  slug      String   @unique
+  id        String    @id @default(cuid())
+  name      String    @unique
+  slug      String    @unique
   color     String?
   icon      String?
-  createdAt DateTime @default(now())
+  lifeArea  LifeArea  @default(PERSONAL)
+  summary   String?
+  parentId  String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 
-  notes     NoteTopic[]
-  tasks     TaskTopic[]
-  meetings  MeetingTopic[]
+  parent          Topic?          @relation("TopicHierarchy", fields: [parentId], references: [id])
+  children        Topic[]         @relation("TopicHierarchy")
+  notes           NoteTopic[]
+  tasks           TaskTopic[]
+  meetings        MeetingTopic[]
+  knowledgeNotes  KnowledgeNote[]
+  routines        RoutineTopic[]
 
   @@map("topics")
+}
+
+// ─── KnowledgeNote (Unified knowledge entity) ─────────────────────
+
+model KnowledgeNote {
+  id        String              @id @default(cuid())
+  title     String
+  content   String
+  excerpt   String?
+  type      KnowledgeNoteType
+  status    KnowledgeNoteStatus @default(DRAFT)
+  topicId   String?
+  tags      String[]
+  metadata  Json?
+  priority  Priority?
+  userId    String
+  createdAt DateTime            @default(now())
+  updatedAt DateTime            @updatedAt
+
+  topic     Topic?              @relation(fields: [topicId], references: [id])
+  user      User                @relation(fields: [userId], references: [id])
+
+  edgesFrom KnowledgeEdge[]     @relation("EdgeFrom")
+  edgesTo   KnowledgeEdge[]     @relation("EdgeTo")
+  sources   ResearchSource[]
+
+  embedding Unsupported("vector(1536)")?
+
+  @@index([userId, type])
+  @@index([topicId])
+  @@index([userId, status])
+  @@map("knowledge_notes")
+}
+
+// ─── ResearchSource (linked to KnowledgeNote of type RESEARCH) ────
+
+model ResearchSource {
+  id                String         @id @default(cuid())
+  knowledgeNoteId   String
+  title             String
+  url               String
+  excerpt           String?
+  createdAt         DateTime       @default(now())
+
+  knowledgeNote     KnowledgeNote  @relation(fields: [knowledgeNoteId], references: [id], onDelete: Cascade)
+
+  @@map("research_sources")
+}
+
+enum KnowledgeNoteType {
+  NOTE
+  RESEARCH
+  RESEARCH_DRAFT
+  CHECKLIST
+  GUIDE
+  JOURNAL
+  RESOURCE
+  RECIPE
+  TRAVEL_TEMPLATE
+  GARDEN_LOG
+  LEARNING
+  CULTURAL_NOTE
+  MEETING_NOTE
+  IDEA
+  ROUTINE_NOTE
+  ACTION_ITEM
+}
+
+enum KnowledgeNoteStatus {
+  DRAFT
+  ACTIVE
+  COMPLETED
+  PUBLISHED
+  ARCHIVED
+}
+
+// ─── KnowledgeEdge (Graph relations) ──────────────────────────────
+
+model KnowledgeEdge {
+  id           String           @id @default(cuid())
+  fromId       String
+  toId         String
+  relationType EdgeRelationType
+  createdAt    DateTime         @default(now())
+
+  from         KnowledgeNote    @relation("EdgeFrom", fields: [fromId], references: [id], onDelete: Cascade)
+  to           KnowledgeNote    @relation("EdgeTo", fields: [toId], references: [id], onDelete: Cascade)
+
+  @@unique([fromId, toId, relationType])
+  @@index([fromId])
+  @@index([toId])
+  @@map("knowledge_edges")
+}
+
+enum EdgeRelationType {
+  REFERENCES
+  DERIVED_FROM
+  RELATED_TO
+  SUPPORTS
+  CONTRADICTS
+  BELONGS_TO_TOPIC
+  GENERATED_FROM
+  APPLIES_TO
+  REQUIRES
+  INSPIRED_BY
+}
+
+// ─── RoutineTopic (link routines to topics) ───────────────────────
+
+model RoutineTopic {
+  id        String @id @default(cuid())
+  routineId String
+  topicId   String
+
+  routine   Routine @relation(fields: [routineId], references: [id], onDelete: Cascade)
+  topic     Topic   @relation(fields: [topicId], references: [id], onDelete: Cascade)
+
+  @@unique([routineId, topicId])
+  @@map("routine_topics")
 }
 
 model NoteTopic {
@@ -327,6 +455,7 @@ model Routine {
   user        User            @relation(fields: [userId], references: [id])
   steps       RoutineStep[]
   executions  RoutineExecution[]
+  topics      RoutineTopic[]
 
   @@index([userId, isActive])
   @@map("routines")

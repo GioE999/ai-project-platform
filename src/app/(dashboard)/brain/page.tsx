@@ -1,168 +1,169 @@
 "use client";
-import { useState, useEffect } from "react";
-import { useEditor, EditorContent } from "@tiptap/react";
-import StarterKit from "@tiptap/starter-kit";
-import { Plus, FileText, Link2 } from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
+import { useSearchParams } from "next/navigation";
+import { Brain, Plus, Search, Lightbulb, FlaskConical, ListChecks, Sparkles } from "lucide-react";
+import { HYPERBRAIN_TOPICS_SEED, type SeedTopic } from "@/lib/brain/seed";
+import { TopicWorkspace } from "@/components/brain/TopicWorkspace";
+import { QuickCaptureBar } from "@/components/brain/QuickCaptureBar";
+import { CommandPalette } from "@/components/brain/CommandPalette";
 
-interface Note {
-  id: string;
-  title: string;
-  content: string;
-  updatedAt: string;
-}
-
-const initialNotes: Note[] = [
-  { id: "n1", title: "Arquitectura del Sistema", content: "## Visión General\n\nEl sistema sigue una arquitectura de [[Microservicios]] con comunicación asíncrona.\n\nBase de datos principal: [[PostgreSQL]] con extensiones para búsqueda vectorial.\n\n### Componentes\n- API Gateway (Next.js App Router)\n- Servicios backend independientes\n- Cola de mensajes para eventos", updatedAt: "2025-01-10" },
-  { id: "n2", title: "Microservicios", content: "## Patrón de Microservicios\n\nCada servicio tiene su propia base de datos y se comunica mediante eventos.\n\nInfraestructura:\n- [[API Gateway]] para routing y auth\n- [[Docker]] para containerización\n- Kubernetes para orquestación\n\n### Servicios actuales\n1. Auth Service\n2. Task Service\n3. Notification Service", updatedAt: "2025-01-09" },
-  { id: "n3", title: "PostgreSQL", content: "## PostgreSQL como DB principal\n\nUsamos [[pgvector]] para embeddings de búsqueda semántica.\n\nORM: [[Prisma]] con migraciones automáticas.\n\n### Configuración\n- Pool de conexiones: 20\n- Réplicas de lectura: 2\n- Backups diarios automatizados", updatedAt: "2025-01-08" },
-  { id: "n4", title: "Reunión Sprint 11", content: "## Notas de la Reunión\n\nProyecto: [[MVP Plataforma]]\n\n### Temas discutidos\n- Progreso del sprint\n- Blockers identificados\n- Planning para sprint 12\n\n### [[Action Items]]\n- Revisar PRs pendientes\n- Actualizar documentación\n- Preparar demo para stakeholders", updatedAt: "2025-01-07" },
-  { id: "n5", title: "Ideas de Producto", content: "## Brainstorming\n\nBasado en [[UX Research]] del Q4:\n\n- Dashboard personalizable\n- Integración con Slack\n- [[Roadmap]] visual estilo timeline\n- AI-powered task prioritization\n- Templates de proyectos\n\n### Prioridad alta\n- Búsqueda semántica (en progreso)\n- Notificaciones inteligentes", updatedAt: "2025-01-06" },
-];
-
-function extractWikilinks(content: string): string[] {
-  const matches = content.match(/\[\[([^\]]+)\]\]/g);
-  return matches ? matches.map(m => m.slice(2, -2)) : [];
-}
-
-function getBacklinks(noteTitle: string, notes: Note[]) {
-  return notes.filter(n => n.id !== noteTitle && extractWikilinks(n.content).some(link => link.toLowerCase() === noteTitle.toLowerCase()));
-}
-
-function renderContentWithLinks(content: string): string {
-  return content.replace(/\[\[([^\]]+)\]\]/g, '<span class="text-primary font-medium bg-primary/10 px-1 rounded cursor-pointer">$1</span>');
-}
+const lifeAreaLabels: Record<string, string> = {
+  SCIENTIFIC: "Científico",
+  TECH: "Tecnología",
+  CULTURAL: "Cultural",
+  PERSONAL: "Personal",
+  PHILOSOPHICAL: "Filosófico",
+  ECONOMIC: "Económico",
+};
 
 export default function BrainPage() {
-  const [notes, setNotes] = useState<Note[]>(initialNotes);
-  const [selectedId, setSelectedId] = useState<string>("n1");
+  const searchParams = useSearchParams();
+  const [selectedTopic, setSelectedTopic] = useState<SeedTopic | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterDomain, setFilterDomain] = useState<string>("all");
 
-  const selectedNote = notes.find(n => n.id === selectedId) || notes[0];
-  const backlinks = selectedNote ? getBacklinks(selectedNote.title, notes) : [];
-  const wikilinks = selectedNote ? extractWikilinks(selectedNote.content) : [];
-
-  const editor = useEditor({
-    extensions: [StarterKit],
-    content: selectedNote?.content || "",
-    editorProps: { attributes: { class: "prose prose-sm max-w-none focus:outline-none min-h-[200px] p-4" } },
-  });
-
+  // Handle ?topic= query param from external links (e.g. routines)
   useEffect(() => {
-    if (editor && selectedNote) {
-      editor.commands.setContent(selectedNote.content);
+    const topicSlug = searchParams.get("topic");
+    if (topicSlug && !selectedTopic) {
+      const found = HYPERBRAIN_TOPICS_SEED.find(t => t.slug === topicSlug);
+      if (found) setSelectedTopic(found);
     }
-  }, [selectedId, editor, selectedNote]);
+  }, [searchParams, selectedTopic]);
 
-  function addNote() {
-    const newNote: Note = {
-      id: crypto.randomUUID(),
-      title: "Nueva Nota",
-      content: "Escribe aquí...",
-      updatedAt: new Date().toISOString().slice(0, 10),
-    };
-    setNotes([newNote, ...notes]);
-    setSelectedId(newNote.id);
+  const domains = useMemo(() => {
+    const set = new Set(HYPERBRAIN_TOPICS_SEED.map(t => t.lifeArea));
+    return Array.from(set);
+  }, []);
+
+  const filteredTopics = useMemo(() => {
+    let items = HYPERBRAIN_TOPICS_SEED;
+    if (filterDomain !== "all") items = items.filter(t => t.lifeArea === filterDomain);
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      items = items.filter(t => t.name.toLowerCase().includes(q) || t.tags.some(tag => tag.includes(q)));
+    }
+    return items;
+  }, [filterDomain, searchQuery]);
+
+  function handleCommand(action: string, payload?: any) {
+    if (action === "new-research") window.location.href = "/brain/research";
+    if (action === "open-graph") window.location.href = "/brain/graph";
   }
 
-  function saveNote() {
-    if (!editor || !selectedNote) return;
-    setNotes(notes.map(n => n.id === selectedNote.id ? { ...n, content: editor.getHTML(), updatedAt: new Date().toISOString().slice(0, 10) } : n));
-  }
+  // Keyboard: Escape to deselect
+  useEffect(() => {
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === "Escape" && selectedTopic) setSelectedTopic(null);
+    }
+    document.addEventListener("keydown", handleKey);
+    return () => document.removeEventListener("keydown", handleKey);
+  }, [selectedTopic]);
 
   return (
-    <div>
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Second Brain</h1>
-        <button onClick={addNote} className="flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-sm text-primary-foreground hover:bg-primary/90">
-          <Plus className="h-4 w-4" />Nueva Nota
-        </button>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <Brain className="h-7 w-7 text-primary" />
+          <div>
+            <h1 className="text-2xl font-bold">HyperBrain</h1>
+            <p className="text-xs text-muted-foreground">
+              {HYPERBRAIN_TOPICS_SEED.length} temas · {HYPERBRAIN_TOPICS_SEED.reduce((a, t) => a + t.initialNotes.length, 0)} notas · {HYPERBRAIN_TOPICS_SEED.reduce((a, t) => a + t.initialLearnings.length, 0)} aprendizajes
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <kbd className="hidden sm:inline-flex rounded border bg-muted px-2 py-1 text-[10px] text-muted-foreground">⌘K</kbd>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        {/* Note List */}
-        <div className="lg:col-span-1 space-y-2">
-          {notes.map(note => (
-            <button key={note.id} onClick={() => setSelectedId(note.id)} className={`w-full rounded-lg border p-3 text-left transition-colors ${selectedId === note.id ? "border-primary bg-primary/5" : "hover:bg-accent"}`}>
-              <div className="flex items-center gap-2">
-                <FileText className="h-4 w-4 text-muted-foreground shrink-0" />
-                <div className="min-w-0">
-                  <h4 className="font-medium truncate">{note.title}</h4>
-                  <p className="text-xs text-muted-foreground">{note.updatedAt}</p>
-                </div>
-              </div>
-            </button>
-          ))}
-        </div>
+      {/* Quick Capture Bar */}
+      <QuickCaptureBar activeTopic={selectedTopic?.name} />
 
-        {/* Editor + Graph */}
-        <div className="lg:col-span-2 space-y-4">
-          {selectedNote && (
-            <>
-              <div className="rounded-xl border bg-card overflow-hidden">
-                <div className="border-b px-4 py-3 flex items-center justify-between">
-                  <h2 className="font-semibold">{selectedNote.title}</h2>
-                  <button onClick={saveNote} className="rounded-md bg-primary px-3 py-1.5 text-xs text-primary-foreground hover:bg-primary/90">Guardar</button>
-                </div>
-                <EditorContent editor={editor} />
-              </div>
+      {/* Topics Index */}
+      {!selectedTopic && (
+        <section className="space-y-4">
+          {/* Search + Filters */}
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="relative flex-1 min-w-[200px] max-w-sm">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <input
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                placeholder="Buscar tema..."
+                className="w-full rounded-lg border bg-transparent pl-9 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+              />
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              <button onClick={() => setFilterDomain("all")} className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${filterDomain === "all" ? "bg-primary text-primary-foreground" : "bg-muted hover:bg-muted/80"}`}>
+                Todos
+              </button>
+              {domains.map(d => (
+                <button key={d} onClick={() => setFilterDomain(d)} className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${filterDomain === d ? "bg-primary text-primary-foreground" : "bg-muted hover:bg-muted/80"}`}>
+                  {lifeAreaLabels[d] || d}
+                </button>
+              ))}
+            </div>
+          </div>
 
-              {/* Wikilinks and Backlinks */}
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <div className="rounded-xl border bg-card p-4">
-                  <h3 className="mb-2 text-sm font-semibold flex items-center gap-1.5"><Link2 className="h-3.5 w-3.5" />Enlaces ({wikilinks.length})</h3>
-                  <div className="flex flex-wrap gap-1.5">
-                    {wikilinks.map((link, i) => (
-                      <span key={i} className="rounded bg-primary/10 px-2 py-0.5 text-xs text-primary font-medium">{link}</span>
-                    ))}
-                    {wikilinks.length === 0 && <p className="text-xs text-muted-foreground">Sin enlaces</p>}
+          {/* Topics Grid */}
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {filteredTopics.map(topic => (
+              <button
+                key={topic.slug}
+                onClick={() => setSelectedTopic(topic)}
+                className="rounded-xl border bg-card p-4 text-left hover:border-primary/30 hover:shadow-md transition-all group"
+              >
+                <div className="flex items-start gap-3">
+                  <span className="text-2xl">{topic.icon}</span>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-sm group-hover:text-primary transition-colors">{topic.name}</h3>
+                    <p className="text-[11px] text-muted-foreground mt-1 line-clamp-2">{topic.description}</p>
+                    <div className="flex items-center gap-3 mt-2 text-[10px] text-muted-foreground">
+                      <span>{topic.initialNotes.length} notas</span>
+                      <span>{topic.initialLearnings.length} aprendizajes</span>
+                    </div>
                   </div>
                 </div>
-                <div className="rounded-xl border bg-card p-4">
-                  <h3 className="mb-2 text-sm font-semibold">Backlinks ({backlinks.length})</h3>
-                  <div className="space-y-1">
-                    {backlinks.map(bl => (
-                      <button key={bl.id} onClick={() => setSelectedId(bl.id)} className="block text-xs text-primary hover:underline">{bl.title}</button>
-                    ))}
-                    {backlinks.length === 0 && <p className="text-xs text-muted-foreground">Sin backlinks</p>}
-                  </div>
+                <div className="flex flex-wrap gap-1 mt-2">
+                  {topic.tags.slice(0, 3).map(tag => (
+                    <span key={tag} className="rounded bg-muted px-1.5 py-0.5 text-[9px] text-muted-foreground">{tag}</span>
+                  ))}
                 </div>
-              </div>
+              </button>
+            ))}
+          </div>
 
-              {/* Simple Graph Visualization */}
-              <div className="rounded-xl border bg-card p-4">
-                <h3 className="mb-3 text-sm font-semibold">Grafo de Conocimiento</h3>
-                <div className="relative h-48 flex items-center justify-center">
-                  <div className="absolute rounded-full bg-primary w-14 h-14 flex items-center justify-center text-[10px] text-primary-foreground font-medium text-center leading-tight px-1 shadow-md z-10">
-                    {selectedNote.title.split(" ").slice(0, 2).join(" ")}
-                  </div>
-                  {wikilinks.slice(0, 6).map((link, i) => {
-                    const angle = (i * 360) / Math.min(wikilinks.length, 6);
-                    const radius = 80;
-                    const x = Math.cos((angle * Math.PI) / 180) * radius;
-                    const y = Math.sin((angle * Math.PI) / 180) * radius;
-                    return (
-                      <div key={i} className="absolute" style={{ transform: `translate(${x}px, ${y}px)` }}>
-                        <div className="rounded-full bg-muted border w-12 h-12 flex items-center justify-center text-[9px] text-center leading-tight px-1 font-medium">
-                          {link.split(" ").slice(0, 2).join(" ")}
-                        </div>
-                      </div>
-                    );
-                  })}
-                  {/* Lines from center to nodes */}
-                  <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ overflow: "visible" }}>
-                    {wikilinks.slice(0, 6).map((_, i) => {
-                      const angle = (i * 360) / Math.min(wikilinks.length, 6);
-                      const radius = 80;
-                      const x = Math.cos((angle * Math.PI) / 180) * radius;
-                      const y = Math.sin((angle * Math.PI) / 180) * radius;
-                      return <line key={i} x1="50%" y1="50%" x2={`calc(50% + ${x}px)`} y2={`calc(50% + ${y}px)`} stroke="currentColor" strokeOpacity={0.2} strokeWidth={1} />;
-                    })}
-                  </svg>
-                </div>
-              </div>
-            </>
+          {filteredTopics.length === 0 && (
+            <p className="text-center text-sm text-muted-foreground py-12">No se encontraron temas para "{searchQuery}"</p>
           )}
-        </div>
-      </div>
+        </section>
+      )}
+
+      {/* Topic Workspace (when selected) */}
+      {selectedTopic && (
+        <section>
+          {/* Back button */}
+          <button
+            onClick={() => setSelectedTopic(null)}
+            className="flex items-center gap-2 rounded-lg border border-primary/30 bg-primary/5 px-4 py-2 text-sm font-medium text-primary hover:bg-primary/10 transition-colors mb-4"
+          >
+            <span className="text-lg">{selectedTopic.icon}</span>
+            {selectedTopic.name}
+            <span className="text-xs opacity-60 ml-1">✕ Cerrar</span>
+          </button>
+
+          <TopicWorkspace topic={selectedTopic} />
+        </section>
+      )}
+
+      {/* Command Palette */}
+      <CommandPalette
+        onAction={handleCommand}
+        topicName={selectedTopic?.name}
+        notes={selectedTopic?.initialNotes.map((n, i) => ({ id: `${selectedTopic.slug}-${i}`, title: n.title })) || []}
+      />
     </div>
   );
 }

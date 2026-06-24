@@ -1,10 +1,12 @@
 "use client";
 import { useState, useEffect } from "react";
-import { Plus, X, Play, CheckCircle2, Circle, Clock, Pencil, Check, Timer, BarChart3, Sparkles } from "lucide-react";
+import { Plus, X, Play, CheckCircle2, Circle, Clock, Pencil, Check, Timer, BarChart3, Sparkles, Brain } from "lucide-react";
+import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 
 type RoutineCategory = "MORNING" | "EVENING" | "WORKOUT" | "SKINCARE" | "CUSTOM";
 type ExecutionStatus = "COMPLETED" | "PARTIAL" | "SKIPPED";
+type TrainingPhase = "v1" | "v2" | "v3";
 
 interface RoutineStep {
   id: string;
@@ -32,14 +34,15 @@ interface Routine {
   timeWindow?: string;
   steps: RoutineStep[];
   executions: RoutineExecution[];
+  phase?: TrainingPhase;
 }
 
-const categoryConfig: Record<RoutineCategory, { label: string; emoji: string; color: string }> = {
-  MORNING: { label: "Mañana", emoji: "🌅", color: "bg-amber-100 text-amber-800" },
-  EVENING: { label: "Noche", emoji: "🌙", color: "bg-purple-100 text-purple-800" },
-  WORKOUT: { label: "Ejercicio", emoji: "💪", color: "bg-red-100 text-red-800" },
-  SKINCARE: { label: "Skincare", emoji: "✨", color: "bg-green-100 text-green-800" },
-  CUSTOM: { label: "Custom", emoji: "⚡", color: "bg-blue-100 text-blue-800" },
+const categoryConfig: Record<RoutineCategory, { label: string; emoji: string; color: string; topicSlug: string }> = {
+  MORNING: { label: "Mañana", emoji: "🌅", color: "bg-amber-100 text-amber-800", topicSlug: "productividad-sistemas" },
+  EVENING: { label: "Noche", emoji: "🌙", color: "bg-purple-100 text-purple-800", topicSlug: "salud-bienestar" },
+  WORKOUT: { label: "Ejercicio", emoji: "💪", color: "bg-red-100 text-red-800", topicSlug: "salud-bienestar" },
+  SKINCARE: { label: "Skincare", emoji: "✨", color: "bg-green-100 text-green-800", topicSlug: "salud-bienestar" },
+  CUSTOM: { label: "Custom", emoji: "⚡", color: "bg-blue-100 text-blue-800", topicSlug: "productividad-sistemas" },
 };
 
 const initialRoutines: Routine[] = [
@@ -63,22 +66,116 @@ const initialRoutines: Routine[] = [
     ],
   },
   {
-    id: "r2", name: "Entrenamiento Full Body", category: "WORKOUT", description: "Rutina de fuerza 3x semana, enfocada en movimientos compuestos.", isActive: true,
-    daysOfWeek: ["Lun", "Mié", "Vie"], timeWindow: "morning",
+    id: "r2", name: "Fuerza V1: Full Body A", category: "WORKOUT", description: "Meses 0–3. Sentadilla, Press Banca, Remo, Plancha. Semana 1: A-B-A / Semana 2: B-A-B.", isActive: true, phase: "v1",
+    daysOfWeek: ["Lun", "Vie"], timeWindow: "morning",
     steps: [
-      { id: "s7", order: 1, title: "Calentamiento: movilidad articular", estimatedMinutes: 5 },
-      { id: "s8", order: 2, title: "Sentadillas 4x10", estimatedMinutes: 8 },
-      { id: "s9", order: 3, title: "Press banca 4x8", estimatedMinutes: 8 },
-      { id: "s10", order: 4, title: "Peso muerto rumano 3x12", estimatedMinutes: 7 },
-      { id: "s11", order: 5, title: "Remo con mancuerna 3x10", estimatedMinutes: 7 },
-      { id: "s12", order: 6, title: "Core: plank 3x45s + crunches", estimatedMinutes: 5 },
-      { id: "s13", order: 7, title: "Enfriamiento y estiramientos", estimatedMinutes: 5 },
+      { id: "s7", order: 1, title: "Calentamiento: 5 min cardio suave + movilidad articular", estimatedMinutes: 8 },
+      { id: "s7b", order: 2, title: "Activación: puentes de cadera + band pulls", estimatedMinutes: 3 },
+      { id: "s7c", order: 3, title: "Series de activación: 1-2 series al 40-50% del peso", estimatedMinutes: 3 },
+      { id: "s8", order: 4, title: "Sentadilla con barra 3x8-10 (60-65% 1RM) — 2 min descanso", estimatedMinutes: 10 },
+      { id: "s9", order: 5, title: "Press banca con barra 3x8-10 (60-65% 1RM) — 2 min descanso", estimatedMinutes: 10 },
+      { id: "s10", order: 6, title: "Remo con barra inclinado 3x8-10 (60-65% 1RM) — 2 min descanso", estimatedMinutes: 10 },
+      { id: "s11", order: 7, title: "Plancha frontal 3x30s — 1 min descanso", estimatedMinutes: 5 },
+      { id: "s12", order: 8, title: "Enfriamiento: estiramientos estáticos 30s/posición", estimatedMinutes: 5 },
+      { id: "s13", order: 9, title: "Respiración profunda / down-regulate", estimatedMinutes: 3 },
     ],
     executions: [
       { id: "e6", date: "2025-01-20", status: "COMPLETED" },
       { id: "e7", date: "2025-01-22", status: "COMPLETED" },
       { id: "e8", date: "2025-01-24", status: "PARTIAL", notes: "Solo upper body" },
     ],
+  },
+  {
+    id: "r2b", name: "Fuerza V1: Full Body B", category: "WORKOUT", description: "Meses 0–3. Peso muerto, Press militar, Jalón, Zancadas. Alterna con A: S1 A-B-A / S2 B-A-B.", isActive: true, phase: "v1",
+    daysOfWeek: ["Mié"], timeWindow: "morning",
+    steps: [
+      { id: "s30", order: 1, title: "Calentamiento: 5 min cardio suave + movilidad articular", estimatedMinutes: 8 },
+      { id: "s31", order: 2, title: "Activación: puentes de cadera + band pulls", estimatedMinutes: 3 },
+      { id: "s32", order: 3, title: "Series de activación: 1-2 series al 40-50% del peso", estimatedMinutes: 3 },
+      { id: "s33", order: 4, title: "Peso muerto con barra 3x6-8 (60-65% 1RM) — 3 min descanso", estimatedMinutes: 12 },
+      { id: "s34", order: 5, title: "Press militar con mancuernas 3x8-10 (60-65% 1RM) — 2 min descanso", estimatedMinutes: 10 },
+      { id: "s35", order: 6, title: "Jalón al pecho o dominadas asistidas 3x8-10 — 2 min descanso", estimatedMinutes: 10 },
+      { id: "s36", order: 7, title: "Zancadas con peso corporal 3x10 c/pierna — 1.5 min descanso", estimatedMinutes: 8 },
+      { id: "s37", order: 8, title: "Enfriamiento: estiramientos estáticos 30s/posición", estimatedMinutes: 5 },
+      { id: "s38", order: 9, title: "Respiración profunda / down-regulate", estimatedMinutes: 3 },
+    ],
+    executions: [],
+  },
+  {
+    id: "r2c", name: "Fuerza V2: Upper", category: "WORKOUT", description: "Meses 3–8. Press banca, Remo, Press militar, Dominadas, Bíceps, Tríceps. 70–80% 1RM.", isActive: true, phase: "v2",
+    daysOfWeek: ["Lun", "Jue"], timeWindow: "morning",
+    steps: [
+      { id: "s40", order: 1, title: "Calentamiento: cardio + movilidad + activación escapular", estimatedMinutes: 10 },
+      { id: "s41", order: 2, title: "Press de banca con barra 4x6-8 (75-80% 1RM) — 3 min", estimatedMinutes: 15 },
+      { id: "s42", order: 3, title: "Remo con barra inclinado 4x6-8 (75-80% 1RM) — 3 min", estimatedMinutes: 15 },
+      { id: "s43", order: 4, title: "Press militar con barra 3x8-10 (70-75% 1RM) — 2 min", estimatedMinutes: 10 },
+      { id: "s44", order: 5, title: "Dominadas (peso corporal/lastradas) 3x6-10 — 2 min", estimatedMinutes: 10 },
+      { id: "s45", order: 6, title: "Curl bíceps con barra 3x10-12 — 90s", estimatedMinutes: 7 },
+      { id: "s46", order: 7, title: "Extensión tríceps cable 3x10-12 — 90s", estimatedMinutes: 7 },
+      { id: "s47", order: 8, title: "Enfriamiento: estiramientos + respiración", estimatedMinutes: 6 },
+    ],
+    executions: [],
+  },
+  {
+    id: "r2d", name: "Fuerza V2: Lower", category: "WORKOUT", description: "Meses 3–8. Sentadilla, RDL, Prensa, Curl isquio, Pantorrillas, Core. 70–85% 1RM.", isActive: true, phase: "v2",
+    daysOfWeek: ["Mar", "Vie"], timeWindow: "morning",
+    steps: [
+      { id: "s50", order: 1, title: "Calentamiento: cardio + movilidad cadera + activación glúteos", estimatedMinutes: 10 },
+      { id: "s51", order: 2, title: "Sentadilla con barra 4x5-8 (75-85% 1RM) — 3 min", estimatedMinutes: 15 },
+      { id: "s52", order: 3, title: "Peso muerto rumano 4x8-10 (70-75% 1RM) — 2.5 min", estimatedMinutes: 12 },
+      { id: "s53", order: 4, title: "Prensa de piernas 3x10-12 (70% 1RM) — 2 min", estimatedMinutes: 10 },
+      { id: "s54", order: 5, title: "Curl isquiotibiales 3x10-12 — 90s", estimatedMinutes: 7 },
+      { id: "s55", order: 6, title: "Elevaciones pantorrilla de pie 4x12-15 — 60s", estimatedMinutes: 7 },
+      { id: "s56", order: 7, title: "Core: rueda abdominal 3x8-10 — 60s", estimatedMinutes: 5 },
+      { id: "s57", order: 8, title: "Enfriamiento: estiramientos + respiración", estimatedMinutes: 6 },
+    ],
+    executions: [],
+  },
+  {
+    id: "r2e", name: "Fuerza V3: Push", category: "WORKOUT", description: "Meses 8+. Press banca, Inclinado, Militar, Laterales, Fondos, Tríceps. 80-87% 1RM.", isActive: true, phase: "v3",
+    daysOfWeek: ["Lun", "Jue"], timeWindow: "morning",
+    steps: [
+      { id: "s60", order: 1, title: "Calentamiento: cardio + movilidad + activación escapular", estimatedMinutes: 10 },
+      { id: "s61", order: 2, title: "Press banca con barra 5x4-6 (80-87% 1RM) — 3-4 min", estimatedMinutes: 20 },
+      { id: "s62", order: 3, title: "Press inclinado mancuernas 4x8-10 (70-75% 1RM) — 2.5 min", estimatedMinutes: 12 },
+      { id: "s63", order: 4, title: "Press militar sentado barra 4x6-8 (78-83% 1RM) — 3 min", estimatedMinutes: 15 },
+      { id: "s64", order: 5, title: "Elevaciones laterales 4x12-15 — 60-90s", estimatedMinutes: 8 },
+      { id: "s65", order: 6, title: "Fondos paralelas lastrados 3x8-12 — 2 min", estimatedMinutes: 8 },
+      { id: "s66", order: 7, title: "Extensión tríceps overhead 3x10-12 — 90s", estimatedMinutes: 7 },
+      { id: "s67", order: 8, title: "Enfriamiento: estiramientos + respiración", estimatedMinutes: 6 },
+    ],
+    executions: [],
+  },
+  {
+    id: "r2f", name: "Fuerza V3: Pull", category: "WORKOUT", description: "Meses 8+. Peso muerto, Dominadas lastradas, Remo Pendlay, Cable, Curls. 82-90% 1RM.", isActive: true, phase: "v3",
+    daysOfWeek: ["Mar", "Vie"], timeWindow: "morning",
+    steps: [
+      { id: "s70", order: 1, title: "Calentamiento: cardio + movilidad + activación dorsal", estimatedMinutes: 10 },
+      { id: "s71", order: 2, title: "Peso muerto convencional 5x3-5 (82-90% 1RM) — 4-5 min", estimatedMinutes: 22 },
+      { id: "s72", order: 3, title: "Dominadas lastradas 4x6-8 — 3 min", estimatedMinutes: 14 },
+      { id: "s73", order: 4, title: "Remo Pendlay 4x5-7 (78-83% 1RM) — 3 min", estimatedMinutes: 14 },
+      { id: "s74", order: 5, title: "Remo polea horizontal 3x10-12 — 2 min", estimatedMinutes: 8 },
+      { id: "s75", order: 6, title: "Curl barra EZ 4x8-10 (70-75% 1RM) — 90s", estimatedMinutes: 8 },
+      { id: "s76", order: 7, title: "Curl martillo alterno 3x10 c/brazo — 90s", estimatedMinutes: 7 },
+      { id: "s77", order: 8, title: "Enfriamiento: estiramientos + respiración", estimatedMinutes: 6 },
+    ],
+    executions: [],
+  },
+  {
+    id: "r2g", name: "Fuerza V3: Legs", category: "WORKOUT", description: "Meses 8+. Sentadilla, RDL, Prensa, Extensiones, Curl, Pantorrillas, Hip thrust. 83-90% 1RM.", isActive: true, phase: "v3",
+    daysOfWeek: ["Mié", "Sáb"], timeWindow: "morning",
+    steps: [
+      { id: "s80", order: 1, title: "Calentamiento: cardio + movilidad cadera + activación glúteos", estimatedMinutes: 10 },
+      { id: "s81", order: 2, title: "Sentadilla con barra 5x3-5 (83-90% 1RM) — 4 min", estimatedMinutes: 20 },
+      { id: "s82", order: 3, title: "Peso muerto rumano 4x8-10 (75-80% 1RM) — 3 min", estimatedMinutes: 14 },
+      { id: "s83", order: 4, title: "Prensa piernas 4x8-12 (75% 1RM) — 2.5 min", estimatedMinutes: 12 },
+      { id: "s84", order: 5, title: "Extensión cuádriceps 3x12-15 — 90s", estimatedMinutes: 7 },
+      { id: "s85", order: 6, title: "Curl isquiotibiales 3x12-15 — 90s", estimatedMinutes: 7 },
+      { id: "s86", order: 7, title: "Elevación pantorrilla 5x15-20 — 60s", estimatedMinutes: 8 },
+      { id: "s87", order: 8, title: "Hip thrust barra 4x8-10 (75-80% 1RM) — 2 min", estimatedMinutes: 10 },
+      { id: "s88", order: 9, title: "Enfriamiento: estiramientos + respiración", estimatedMinutes: 6 },
+    ],
+    executions: [],
   },
   {
     id: "r3", name: "Skincare Noche", category: "SKINCARE", description: "Rutina de cuidado facial antes de dormir. Limpiar, tratar, hidratar.", isActive: true,
@@ -123,6 +220,10 @@ export default function RoutinesPage() {
   const [showForm, setShowForm] = useState(false);
   const [executingSteps, setExecutingSteps] = useState<Set<string>>(new Set());
   const [form, setForm] = useState({ name: "", category: "CUSTOM" as RoutineCategory, description: "" });
+  const [trainingPhase, setTrainingPhase] = useState<TrainingPhase>("v1");
+
+  // Filter: show non-workout routines always + only workouts matching selected phase
+  const visibleRoutines = routines.filter(r => !r.phase || r.phase === trainingPhase);
 
   useEffect(() => {
     function handleKey(e: KeyboardEvent) { if (e.key === "Escape") setSelectedRoutine(null); }
@@ -180,12 +281,22 @@ export default function RoutinesPage() {
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Rutinas</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">{routines.filter(r => r.isActive).length} activas · {routines.reduce((acc, r) => acc + r.executions.length, 0)} ejecuciones totales</p>
+          <p className="text-sm text-muted-foreground mt-0.5">{visibleRoutines.length} visibles · {routines.reduce((acc, r) => acc + r.executions.length, 0)} ejecuciones totales</p>
         </div>
         <button onClick={() => setShowForm(!showForm)} className="flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-sm text-primary-foreground hover:bg-primary/90">
           {showForm ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
           {showForm ? "Cancelar" : "Nueva Rutina"}
         </button>
+      </div>
+
+      {/* Training Phase Selector */}
+      <div className="mb-4 flex items-center gap-2">
+        <span className="text-xs font-medium text-muted-foreground">Fase de entrenamiento:</span>
+        <div className="flex gap-1">
+          <button onClick={() => setTrainingPhase("v1")} className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${trainingPhase === "v1" ? "bg-primary text-primary-foreground" : "bg-muted hover:bg-muted/80"}`}>V1 · Principiante (0–3m)</button>
+          <button onClick={() => setTrainingPhase("v2")} className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${trainingPhase === "v2" ? "bg-primary text-primary-foreground" : "bg-muted hover:bg-muted/80"}`}>V2 · Intermedio (3–8m)</button>
+          <button onClick={() => setTrainingPhase("v3")} className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${trainingPhase === "v3" ? "bg-primary text-primary-foreground" : "bg-muted hover:bg-muted/80"}`}>V3 · Avanzado (8m+)</button>
+        </div>
       </div>
 
       {showForm && (
@@ -203,7 +314,7 @@ export default function RoutinesPage() {
 
       {/* Routine Cards */}
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        {routines.map(routine => {
+        {visibleRoutines.map(routine => {
           const cfg = categoryConfig[routine.category];
           const adherence = getAdherence(routine);
           const totalMin = getTotalMinutes(routine.steps);
@@ -219,10 +330,13 @@ export default function RoutinesPage() {
                 </div>
                 <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${cfg.color}`}>{cfg.label}</span>
               </div>
-              <div className="mt-3 flex items-center gap-4 text-xs text-muted-foreground">
+              <div className="flex items-center gap-4 text-xs text-muted-foreground">
                 <span className="flex items-center gap-1"><CheckCircle2 className="h-3 w-3" />{routine.steps.length} pasos</span>
                 <span className="flex items-center gap-1"><Timer className="h-3 w-3" />{totalMin} min</span>
                 <span className="flex items-center gap-1"><BarChart3 className="h-3 w-3" />{adherence}% adherencia</span>
+                <Link href={`/brain?topic=${cfg.topicSlug}`} onClick={e => e.stopPropagation()} className="flex items-center gap-1 text-primary hover:underline">
+                  <Brain className="h-3 w-3" />Brain
+                </Link>
               </div>
               <div className="mt-2 flex gap-1">
                 {routine.daysOfWeek.map(d => <span key={d} className="rounded bg-muted px-1.5 py-0.5 text-[9px] font-medium">{d}</span>)}
@@ -245,6 +359,9 @@ export default function RoutinesPage() {
                   <div>
                     <h2 className="text-lg font-semibold">{selectedRoutine.name}</h2>
                     <p className="text-xs text-muted-foreground mt-0.5">{selectedRoutine.description}</p>
+                    <Link href={`/brain?topic=${categoryConfig[selectedRoutine.category].topicSlug}`} className="inline-flex items-center gap-1 mt-1.5 text-[11px] text-primary hover:underline">
+                      <Brain className="h-3 w-3" />Ver conocimiento relacionado en Brain
+                    </Link>
                   </div>
                 </div>
                 <button onClick={() => setSelectedRoutine(null)} className="rounded-lg p-2 text-muted-foreground hover:bg-muted"><X className="h-5 w-5" /></button>

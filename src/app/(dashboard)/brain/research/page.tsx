@@ -142,6 +142,8 @@ export default function ResearchPage() {
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [reflection, setReflection] = useState("");
   const [saveOption, setSaveOption] = useState("note");
+  const [saving, setSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState<string | null>(null);
 
   useEffect(() => {
     function handleKey(e: KeyboardEvent) {
@@ -401,16 +403,65 @@ export default function ResearchPage() {
               </div>
 
               {/* Panel Footer */}
-              <div className="border-t p-4 flex items-center gap-2">
-                <select value={saveOption} onChange={e => setSaveOption(e.target.value)} className="rounded-lg border bg-transparent px-3 py-2.5 text-sm">
-                  <option value="note">Guardar como Nota</option>
-                  <option value="draft">Guardar como Borrador</option>
-                  <option value="publish">Publicar en Brain</option>
-                </select>
-                <button className="flex-1 flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm text-primary-foreground hover:bg-primary/90 transition-colors">
-                  <FileText className="h-4 w-4" />
-                  {saveOption === "note" ? "Guardar como Nota" : saveOption === "draft" ? "Guardar Borrador" : "Publicar"}
-                </button>
+              <div className="border-t p-4 flex flex-col gap-2">
+                {saveSuccess && (
+                  <div className="rounded-lg bg-green-50 border border-green-200 px-3 py-2 text-xs text-green-700">
+                    ✓ {saveSuccess}
+                  </div>
+                )}
+                <div className="flex items-center gap-2">
+                  <select value={saveOption} onChange={e => setSaveOption(e.target.value)} className="rounded-lg border bg-transparent px-3 py-2.5 text-sm">
+                    <option value="note">Guardar como Nota</option>
+                    <option value="draft">Guardar como Borrador</option>
+                    <option value="publish">Publicar en Brain</option>
+                  </select>
+                  <button
+                    disabled={saving}
+                    onClick={async () => {
+                      if (!selectedResearch) return;
+                      setSaving(true);
+                      setSaveSuccess(null);
+                      try {
+                        const content = [selectedResearch.fullContent, reflection ? `\n\n## Reflexión\n\n${reflection}` : ""].join("");
+                        await fetch("/api/knowledge", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({
+                            title: selectedResearch.title,
+                            content,
+                            type: saveOption === "draft" ? "RESEARCH_DRAFT" : "RESEARCH",
+                            status: saveOption === "publish" ? "PUBLISHED" : saveOption === "draft" ? "DRAFT" : "COMPLETED",
+                            tags: selectedResearch.relatedTopics,
+                            metadata: {
+                              overview: selectedResearch.overview,
+                              sources: selectedResearch.sources,
+                              hypothesis: selectedResearch.hypothesis,
+                              level: selectedResearch.level,
+                              learnings: selectedResearch.learningsGenerated.map(l => l.content),
+                              sourceResearchId: selectedResearch.id,
+                            },
+                          }),
+                        });
+                        // Update local status
+                        const newStatus = saveOption === "publish" ? "published" : saveOption === "draft" ? "draft" : "completed";
+                        setResearches(prev => prev.map(r => r.id === selectedResearch.id ? { ...r, status: newStatus as any } : r));
+                        setSaveSuccess(
+                          saveOption === "publish" ? "Publicada en Second Brain" :
+                          saveOption === "draft" ? "Guardada como borrador" :
+                          "Guardada como nota en Brain"
+                        );
+                      } catch (err) {
+                        console.error(err);
+                      } finally {
+                        setSaving(false);
+                      }
+                    }}
+                    className="flex-1 flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
+                  >
+                    <FileText className="h-4 w-4" />
+                    {saving ? "Guardando..." : saveOption === "note" ? "Guardar como Nota" : saveOption === "draft" ? "Guardar Borrador" : "Publicar"}
+                  </button>
+                </div>
               </div>
             </motion.aside>
           </>

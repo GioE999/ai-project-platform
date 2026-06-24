@@ -8,3 +8,4 @@ export * from "./events";
 export * from "./search";
 export * from "./routines";
 export * from "./topics";
+export * from "./knowledge";
