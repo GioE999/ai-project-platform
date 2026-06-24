@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CheckSquare, FolderKanban, Video, Brain, Search, LayoutDashboard, Bot, Repeat, Tag, MessageSquare } from "lucide-react";
+import { CheckSquare, FolderKanban, Video, Brain, Search, LayoutDashboard, Bot, Repeat, Tag, MessageSquare, Globe, TrendingUp, BarChart3 } from "lucide-react";
 
 const navItems = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -12,7 +12,10 @@ const navItems = [
   { href: "/brain", label: "Second Brain", icon: Brain },
   { href: "/brain/topics", label: "Temas", icon: Tag },
   { href: "/brain/chat", label: "Chat IA", icon: MessageSquare },
+  { href: "/brain/research", label: "Investigar", icon: Globe },
   { href: "/search", label: "Búsqueda", icon: Search },
+  { href: "/routines/insights", label: "Insights Rutinas", icon: TrendingUp },
+  { href: "/insights", label: "Insights", icon: BarChart3 },
 ];
 
 export function Sidebar() {
