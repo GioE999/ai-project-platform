@@ -15,6 +15,15 @@ interface RoutineStep {
   description?: string;
   estimatedMinutes?: number;
   completed?: boolean;
+  targetWeight?: number;
+  targetReps?: number;
+}
+
+interface StepLog {
+  stepId: string;
+  actualWeight?: number;
+  completedReps?: number;
+  rir?: number;
 }
 
 interface RoutineExecution {
@@ -22,6 +31,8 @@ interface RoutineExecution {
   date: string;
   status: ExecutionStatus;
   notes?: string;
+  stepLogs?: StepLog[];
+  durationMinutes?: number;
 }
 
 interface Routine {
@@ -37,12 +48,12 @@ interface Routine {
   phase?: TrainingPhase;
 }
 
-const categoryConfig: Record<RoutineCategory, { label: string; emoji: string; color: string; topicSlug: string }> = {
-  MORNING: { label: "Mañana", emoji: "🌅", color: "bg-amber-100 text-amber-800", topicSlug: "productividad-sistemas" },
-  EVENING: { label: "Noche", emoji: "🌙", color: "bg-purple-100 text-purple-800", topicSlug: "salud-bienestar" },
-  WORKOUT: { label: "Ejercicio", emoji: "💪", color: "bg-red-100 text-red-800", topicSlug: "salud-bienestar" },
-  SKINCARE: { label: "Skincare", emoji: "✨", color: "bg-green-100 text-green-800", topicSlug: "salud-bienestar" },
-  CUSTOM: { label: "Custom", emoji: "⚡", color: "bg-blue-100 text-blue-800", topicSlug: "productividad-sistemas" },
+const categoryConfig: Record<RoutineCategory, { label: string; emoji: string; color: string; darkColor: string; topicSlug: string }> = {
+  MORNING: { label: "Mañana", emoji: "🌅", color: "bg-amber-100 text-amber-800", darkColor: "dark:bg-amber-900/30 dark:text-amber-300", topicSlug: "productividad-sistemas" },
+  EVENING: { label: "Noche", emoji: "🌙", color: "bg-purple-100 text-purple-800", darkColor: "dark:bg-purple-900/30 dark:text-purple-300", topicSlug: "salud-bienestar" },
+  WORKOUT: { label: "Ejercicio", emoji: "💪", color: "bg-red-100 text-red-800", darkColor: "dark:bg-red-900/30 dark:text-red-300", topicSlug: "salud-bienestar" },
+  SKINCARE: { label: "Skincare", emoji: "✨", color: "bg-green-100 text-green-800", darkColor: "dark:bg-green-900/30 dark:text-green-300", topicSlug: "salud-bienestar" },
+  CUSTOM: { label: "Custom", emoji: "⚡", color: "bg-blue-100 text-blue-800", darkColor: "dark:bg-blue-900/30 dark:text-blue-300", topicSlug: "productividad-sistemas" },
 };
 
 const initialRoutines: Routine[] = [
@@ -232,6 +243,15 @@ export default function RoutinesPage() {
   const [executingSteps, setExecutingSteps] = useState<Set<string>>(new Set());
   const [form, setForm] = useState({ name: "", category: "CUSTOM" as RoutineCategory, description: "" });
   const [trainingPhase, setTrainingPhase] = useState<TrainingPhase>("v1");
+  const [sessionStart, setSessionStart] = useState<number | null>(null);
+  const [elapsed, setElapsed] = useState(0);
+
+  // Timer for execute mode
+  useEffect(() => {
+    if (!sessionStart) { setElapsed(0); return; }
+    const interval = setInterval(() => setElapsed(Math.floor((Date.now() - sessionStart) / 1000)), 1000);
+    return () => clearInterval(interval);
+  }, [sessionStart]);
 
   // V1 alternation: week-based A-B-A / B-A-B pattern
   const currentWeekNumber = Math.ceil((new Date().getTime() - new Date(new Date().getFullYear(), 0, 1).getTime()) / (7 * 24 * 60 * 60 * 1000));
@@ -312,28 +332,38 @@ export default function RoutinesPage() {
         </button>
       </div>
 
-      {/* Training Phase Selector */}
-      <div className="mb-4 flex flex-col gap-2">
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-medium text-muted-foreground">Fase de entrenamiento:</span>
-          <div className="flex gap-1">
-            <button onClick={() => setTrainingPhase("v1")} className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${trainingPhase === "v1" ? "bg-primary text-primary-foreground" : "bg-muted hover:bg-muted/80"}`}>V1 · Principiante (0–3m)</button>
-            <button onClick={() => setTrainingPhase("v2")} className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${trainingPhase === "v2" ? "bg-primary text-primary-foreground" : "bg-muted hover:bg-muted/80"}`}>V2 · Intermedio (3–8m)</button>
-            <button onClick={() => setTrainingPhase("v3")} className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${trainingPhase === "v3" ? "bg-primary text-primary-foreground" : "bg-muted hover:bg-muted/80"}`}>V3 · Avanzado (8m+)</button>
-            <button onClick={() => setTrainingPhase("deload")} className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${trainingPhase === "deload" ? "bg-amber-500 text-white" : "bg-muted hover:bg-muted/80"}`}>💤 Deload</button>
-          </div>
-        </div>
-        {trainingPhase === "v1" && v1TodayRoutine && (
-          <div className="rounded-lg bg-primary/5 border border-primary/20 px-3 py-2 text-xs">
-            <span className="font-medium text-primary">Hoy toca:</span> Full Body {v1TodayRoutine} (Semana {currentWeekNumber} — {isOddWeek ? "A-B-A" : "B-A-B"})
-          </div>
-        )}
-        {trainingPhase === "deload" && (
-          <div className="rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 text-xs text-amber-800">
-            💤 <span className="font-medium">Semana de Deload:</span> Volumen al 50%, peso al 60–70%. Mismos movimientos, menos carga. Recuperación activa del SNC.
-          </div>
-        )}
+      {/* Training Phase Selector — Cards */}
+      <div className="mb-5 grid grid-cols-2 sm:grid-cols-4 gap-2">
+        {([
+          { id: "v1" as const, label: "V1 · Principiante", sub: "0–3 meses", detail: "Full Body A/B, 3días/sem, 45–60min", icon: "🌱" },
+          { id: "v2" as const, label: "V2 · Intermedio", sub: "3–8 meses", detail: "Upper/Lower, 4días/sem, 60–75min", icon: "💪" },
+          { id: "v3" as const, label: "V3 · Avanzado", sub: "8+ meses", detail: "Push/Pull/Legs, 5días/sem, 70–90min", icon: "🔥" },
+          { id: "deload" as const, label: "Deload", sub: "Cada 4–6 sem", detail: "Vol 50%, peso 60–70%, recuperación SNC", icon: "💤" },
+        ]).map(phase => (
+          <button
+            key={phase.id}
+            onClick={() => setTrainingPhase(phase.id)}
+            className={`rounded-xl border p-3 text-left transition-all ${trainingPhase === phase.id ? "border-primary bg-primary/5 ring-1 ring-primary/30" : "hover:border-primary/20 hover:bg-accent/30"}`}
+          >
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-lg">{phase.icon}</span>
+              <span className="text-xs font-semibold">{phase.label}</span>
+            </div>
+            <p className="text-[10px] text-muted-foreground">{phase.sub}</p>
+            <p className="text-[9px] text-muted-foreground mt-0.5">{phase.detail}</p>
+          </button>
+        ))}
       </div>
+      {trainingPhase === "v1" && v1TodayRoutine && (
+        <div className="mb-4 rounded-lg bg-primary/5 border border-primary/20 px-3 py-2 text-xs">
+          <span className="font-medium text-primary">Hoy toca:</span> Full Body {v1TodayRoutine} (Semana {currentWeekNumber} — {isOddWeek ? "A-B-A" : "B-A-B"})
+        </div>
+      )}
+      {trainingPhase === "deload" && (
+        <div className="mb-4 rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 text-xs text-amber-800 dark:bg-amber-900/20 dark:text-amber-300 dark:border-amber-800">
+          💤 <span className="font-medium">Semana de Deload:</span> Volumen al 50%, peso al 60–70%. Mismos movimientos, menos carga. Recuperación activa del SNC.
+        </div>
+      )}
 
       {showForm && (
         <form onSubmit={addRoutine} className="mb-6 rounded-xl border bg-card p-4 space-y-3">
@@ -367,7 +397,7 @@ export default function RoutinesPage() {
                     <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{routine.description}</p>
                   </div>
                 </div>
-                <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${cfg.color}`}>{cfg.label}</span>
+                <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${cfg.color} ${cfg.darkColor}`}>{cfg.label}</span>
               </div>
               <div className="flex items-center gap-4 text-xs text-muted-foreground">
                 <span className="flex items-center gap-1"><CheckCircle2 className="h-3 w-3" />{routine.steps.length} pasos</span>
@@ -445,22 +475,39 @@ export default function RoutinesPage() {
 
                 {activeTab === "execute" && (
                   <div className="p-5 space-y-4">
-                    <div className="rounded-xl bg-primary/5 border border-primary/20 p-3 text-center">
-                      <p className="text-sm font-medium">Modo Ejecución</p>
-                      <p className="text-xs text-muted-foreground">Marca cada paso al completarlo</p>
+                    {/* Timer + Progress */}
+                    <div className="rounded-xl bg-primary/5 border border-primary/20 p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <div>
+                          <p className="text-sm font-semibold">Modo Ejecución</p>
+                          <p className="text-[10px] text-muted-foreground">Marca cada paso al completarlo</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-lg font-mono font-bold text-primary">{Math.floor(elapsed / 60)}:{String(elapsed % 60).padStart(2, "0")}</p>
+                          <p className="text-[9px] text-muted-foreground">tiempo transcurrido</p>
+                        </div>
+                      </div>
+                      {/* Progress bar */}
+                      <div className="h-2 rounded-full bg-muted overflow-hidden">
+                        <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${(executingSteps.size / selectedRoutine.steps.length) * 100}%` }} />
+                      </div>
+                      <p className="text-[10px] text-muted-foreground mt-1 text-right">{executingSteps.size}/{selectedRoutine.steps.length} pasos</p>
                     </div>
                     <div className="space-y-2">
                       {selectedRoutine.steps.map(step => (
-                        <button key={step.id} onClick={() => toggleStep(step.id)} className={`w-full flex items-center gap-3 rounded-lg border p-3 text-left transition-all active:scale-[0.98] ${executingSteps.has(step.id) ? "bg-green-100 border-green-200 dark:bg-green-900/20 dark:border-green-800" : "hover:bg-accent/50 active:bg-accent"}`}>
-                          {executingSteps.has(step.id) ? <CheckCircle2 className="h-5 w-5 text-green-600 shrink-0" /> : <Circle className="h-5 w-5 text-gray-400 shrink-0" />}
-                          <span className={`text-sm ${executingSteps.has(step.id) ? "line-through text-muted-foreground" : "font-medium"}`}>{step.title}</span>
-                          {step.estimatedMinutes && <span className="ml-auto text-xs text-muted-foreground">{step.estimatedMinutes}m</span>}
+                        <button key={step.id} onClick={() => { toggleStep(step.id); if (!sessionStart) setSessionStart(Date.now()); }} className={`w-full flex items-center gap-3 rounded-lg border p-3 text-left transition-all active:scale-[0.98] ${executingSteps.has(step.id) ? "bg-green-100 border-green-200 dark:bg-green-900/20 dark:border-green-800" : "hover:bg-accent/50 active:bg-accent"}`}>
+                          {executingSteps.has(step.id) ? <CheckCircle2 className="h-5 w-5 text-green-600 shrink-0" /> : <Circle className="h-5 w-5 text-muted-foreground/40 shrink-0" />}
+                          <div className="flex-1 min-w-0">
+                            <span className={`text-sm ${executingSteps.has(step.id) ? "line-through text-muted-foreground" : "font-medium"}`}>{step.title}</span>
+                            {step.description && !executingSteps.has(step.id) && <p className="text-[10px] text-muted-foreground mt-0.5">{step.description}</p>}
+                          </div>
+                          {step.estimatedMinutes && <span className="text-xs text-muted-foreground shrink-0">{step.estimatedMinutes}m</span>}
                         </button>
                       ))}
                     </div>
                     <div className="flex items-center justify-between pt-2">
                       <p className="text-xs text-muted-foreground">{executingSteps.size}/{selectedRoutine.steps.length} completados</p>
-                      <button onClick={completeExecution} className="rounded-lg bg-primary px-4 py-2 text-sm text-primary-foreground hover:bg-primary/90">Finalizar Ejecución</button>
+                      <button onClick={() => { completeExecution(); setSessionStart(null); }} className="rounded-lg bg-primary px-4 py-2 text-sm text-primary-foreground hover:bg-primary/90">Finalizar Ejecución</button>
                     </div>
                   </div>
                 )}
