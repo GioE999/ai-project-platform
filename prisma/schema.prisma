@@ -375,3 +375,66 @@ enum RoutineStatus {
   PARTIAL
   SKIPPED
 }
+
+// ─── HyperBrain Extension ─────────────────────────────────────────
+
+enum LifeArea {
+  SCIENTIFIC
+  TECH
+  CULTURAL
+  PERSONAL
+  PHILOSOPHICAL
+  ECONOMIC
+}
+
+enum LearningType {
+  FACT
+  INSIGHT
+  SKILL
+  REFLECTION
+  QUOTE
+}
+
+enum LearningSource {
+  BOOK
+  ARTICLE
+  EXPERIENCE
+  VIDEO
+  CONVERSATION
+}
+
+model Learning {
+  id          String         @id @default(cuid())
+  content     String         @db.VarChar(500)
+  type        LearningType
+  source      LearningSource
+  topicId     String?
+  researchId  String?
+  bookId      String?
+  userId      String
+  createdAt   DateTime       @default(now())
+
+  @@index([userId, createdAt])
+  @@map("learnings")
+}
+
+model Book {
+  id          String     @id @default(cuid())
+  title       String
+  author      String
+  isbn        String?
+  coverUrl    String?
+  status      String     // wishlist | reading | completed
+  progress    Int        @default(0)
+  rating      Int?
+  myTake      String?
+  source      String     // physical | kindle | pdf
+  startDate   DateTime?
+  finishDate  DateTime?
+  topics      String[]
+  userId      String
+  createdAt   DateTime   @default(now())
+
+  @@index([userId, status])
+  @@map("books")
+}
