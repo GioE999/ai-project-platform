@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CheckSquare, FolderKanban, Video, Brain, Search, LayoutDashboard, Bot, Repeat } from "lucide-react";
+import { CheckSquare, FolderKanban, Video, Brain, Search, LayoutDashboard, Bot, Repeat, Tag, MessageSquare } from "lucide-react";
 
 const navItems = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -10,6 +10,8 @@ const navItems = [
   { href: "/meetings", label: "Reuniones", icon: Video },
   { href: "/routines", label: "Rutinas", icon: Repeat },
   { href: "/brain", label: "Second Brain", icon: Brain },
+  { href: "/brain/topics", label: "Temas", icon: Tag },
+  { href: "/brain/chat", label: "Chat IA", icon: MessageSquare },
   { href: "/search", label: "Búsqueda", icon: Search },
 ];
 
