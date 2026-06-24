@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 
 type RoutineCategory = "MORNING" | "EVENING" | "WORKOUT" | "SKINCARE" | "CUSTOM";
 type ExecutionStatus = "COMPLETED" | "PARTIAL" | "SKIPPED";
-type TrainingPhase = "v1" | "v2" | "v3";
+type TrainingPhase = "v1" | "v2" | "v3" | "deload";
 
 interface RoutineStep {
   id: string;
@@ -66,8 +66,8 @@ const initialRoutines: Routine[] = [
     ],
   },
   {
-    id: "r2", name: "Fuerza V1: Full Body A", category: "WORKOUT", description: "Meses 0–3. Sentadilla, Press Banca, Remo, Plancha. Semana 1: A-B-A / Semana 2: B-A-B.", isActive: true, phase: "v1",
-    daysOfWeek: ["Lun", "Vie"], timeWindow: "morning",
+    id: "r2", name: "Fuerza V1: Full Body A", category: "WORKOUT", description: "Meses 0–3. Sentadilla, Press Banca, Remo, Plancha. Semana impar: A-B-A / Semana par: B-A-B.", isActive: true, phase: "v1",
+    daysOfWeek: ["Lun", "Mié", "Vie"], timeWindow: "morning",
     steps: [
       { id: "s7", order: 1, title: "Calentamiento: 5 min cardio suave + movilidad articular", estimatedMinutes: 8 },
       { id: "s7b", order: 2, title: "Activación: puentes de cadera + band pulls", estimatedMinutes: 3 },
@@ -86,8 +86,8 @@ const initialRoutines: Routine[] = [
     ],
   },
   {
-    id: "r2b", name: "Fuerza V1: Full Body B", category: "WORKOUT", description: "Meses 0–3. Peso muerto, Press militar, Jalón, Zancadas. Alterna con A: S1 A-B-A / S2 B-A-B.", isActive: true, phase: "v1",
-    daysOfWeek: ["Mié"], timeWindow: "morning",
+    id: "r2b", name: "Fuerza V1: Full Body B", category: "WORKOUT", description: "Meses 0–3. Peso muerto, Press militar, Jalón, Zancadas. Semana impar: A-B-A / Semana par: B-A-B.", isActive: true, phase: "v1",
+    daysOfWeek: ["Lun", "Mié", "Vie"], timeWindow: "morning",
     steps: [
       { id: "s30", order: 1, title: "Calentamiento: 5 min cardio suave + movilidad articular", estimatedMinutes: 8 },
       { id: "s31", order: 2, title: "Activación: puentes de cadera + band pulls", estimatedMinutes: 3 },
@@ -133,7 +133,7 @@ const initialRoutines: Routine[] = [
   },
   {
     id: "r2e", name: "Fuerza V3: Push", category: "WORKOUT", description: "Meses 8+. Press banca, Inclinado, Militar, Laterales, Fondos, Tríceps. 80-87% 1RM.", isActive: true, phase: "v3",
-    daysOfWeek: ["Lun", "Jue"], timeWindow: "morning",
+    daysOfWeek: ["Lun", "Vie"], timeWindow: "morning",
     steps: [
       { id: "s60", order: 1, title: "Calentamiento: cardio + movilidad + activación escapular", estimatedMinutes: 10 },
       { id: "s61", order: 2, title: "Press banca con barra 5x4-6 (80-87% 1RM) — 3-4 min", estimatedMinutes: 20 },
@@ -148,7 +148,7 @@ const initialRoutines: Routine[] = [
   },
   {
     id: "r2f", name: "Fuerza V3: Pull", category: "WORKOUT", description: "Meses 8+. Peso muerto, Dominadas lastradas, Remo Pendlay, Cable, Curls. 82-90% 1RM.", isActive: true, phase: "v3",
-    daysOfWeek: ["Mar", "Vie"], timeWindow: "morning",
+    daysOfWeek: ["Mar", "Sáb"], timeWindow: "morning",
     steps: [
       { id: "s70", order: 1, title: "Calentamiento: cardio + movilidad + activación dorsal", estimatedMinutes: 10 },
       { id: "s71", order: 2, title: "Peso muerto convencional 5x3-5 (82-90% 1RM) — 4-5 min", estimatedMinutes: 22 },
@@ -163,7 +163,7 @@ const initialRoutines: Routine[] = [
   },
   {
     id: "r2g", name: "Fuerza V3: Legs", category: "WORKOUT", description: "Meses 8+. Sentadilla, RDL, Prensa, Extensiones, Curl, Pantorrillas, Hip thrust. 83-90% 1RM.", isActive: true, phase: "v3",
-    daysOfWeek: ["Mié", "Sáb"], timeWindow: "morning",
+    daysOfWeek: ["Mié"], timeWindow: "morning",
     steps: [
       { id: "s80", order: 1, title: "Calentamiento: cardio + movilidad cadera + activación glúteos", estimatedMinutes: 10 },
       { id: "s81", order: 2, title: "Sentadilla con barra 5x3-5 (83-90% 1RM) — 4 min", estimatedMinutes: 20 },
@@ -174,6 +174,19 @@ const initialRoutines: Routine[] = [
       { id: "s86", order: 7, title: "Elevación pantorrilla 5x15-20 — 60s", estimatedMinutes: 8 },
       { id: "s87", order: 8, title: "Hip thrust barra 4x8-10 (75-80% 1RM) — 2 min", estimatedMinutes: 10 },
       { id: "s88", order: 9, title: "Enfriamiento: estiramientos + respiración", estimatedMinutes: 6 },
+    ],
+    executions: [],
+  },
+  {
+    id: "r2h", name: "Deload: Full Body Ligero", category: "WORKOUT", description: "Semana de recuperación cada 4–6 semanas. Volumen 50%, peso 60–70%. Mismos movimientos, sin fallo.", isActive: true, phase: "deload",
+    daysOfWeek: ["Lun", "Mié", "Vie"], timeWindow: "morning",
+    steps: [
+      { id: "sd1", order: 1, title: "Calentamiento: 5 min cardio suave + movilidad completa", estimatedMinutes: 8 },
+      { id: "sd2", order: 2, title: "Sentadilla 2x8 al 60% del peso habitual — foco en técnica perfecta", estimatedMinutes: 6 },
+      { id: "sd3", order: 3, title: "Press banca / militar 2x8 al 60% — tempo lento (3-1-2)", estimatedMinutes: 6 },
+      { id: "sd4", order: 4, title: "Remo / Jalón 2x8 al 60% — conexión mente-músculo", estimatedMinutes: 6 },
+      { id: "sd5", order: 5, title: "Core: plancha 2x30s + respiración diafragmática", estimatedMinutes: 4 },
+      { id: "sd6", order: 6, title: "Estiramientos prolongados 45s/posición + foam roller", estimatedMinutes: 10 },
     ],
     executions: [],
   },
@@ -221,6 +234,18 @@ export default function RoutinesPage() {
   const [executingSteps, setExecutingSteps] = useState<Set<string>>(new Set());
   const [form, setForm] = useState({ name: "", category: "CUSTOM" as RoutineCategory, description: "" });
   const [trainingPhase, setTrainingPhase] = useState<TrainingPhase>("v1");
+
+  // V1 alternation: week-based A-B-A / B-A-B pattern
+  const currentWeekNumber = Math.ceil((new Date().getTime() - new Date(new Date().getFullYear(), 0, 1).getTime()) / (7 * 24 * 60 * 60 * 1000));
+  const isOddWeek = currentWeekNumber % 2 === 1;
+  // Odd week: A-B-A (Mon=A, Wed=B, Fri=A) | Even week: B-A-B (Mon=B, Wed=A, Fri=B)
+  const todayDayIndex = new Date().getDay(); // 0=Sun, 1=Mon... 5=Fri
+  const v1TodayRoutine: "A" | "B" | null = (() => {
+    if (![1, 3, 5].includes(todayDayIndex)) return null; // Not a training day
+    const daySlot = todayDayIndex === 1 ? 0 : todayDayIndex === 3 ? 1 : 2; // Mon=0, Wed=1, Fri=2
+    const pattern = isOddWeek ? ["A", "B", "A"] : ["B", "A", "B"];
+    return pattern[daySlot] as "A" | "B";
+  })();
 
   // Filter: show non-workout routines always + only workouts matching selected phase
   const visibleRoutines = routines.filter(r => !r.phase || r.phase === trainingPhase);
@@ -290,13 +315,26 @@ export default function RoutinesPage() {
       </div>
 
       {/* Training Phase Selector */}
-      <div className="mb-4 flex items-center gap-2">
-        <span className="text-xs font-medium text-muted-foreground">Fase de entrenamiento:</span>
-        <div className="flex gap-1">
-          <button onClick={() => setTrainingPhase("v1")} className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${trainingPhase === "v1" ? "bg-primary text-primary-foreground" : "bg-muted hover:bg-muted/80"}`}>V1 · Principiante (0–3m)</button>
-          <button onClick={() => setTrainingPhase("v2")} className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${trainingPhase === "v2" ? "bg-primary text-primary-foreground" : "bg-muted hover:bg-muted/80"}`}>V2 · Intermedio (3–8m)</button>
-          <button onClick={() => setTrainingPhase("v3")} className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${trainingPhase === "v3" ? "bg-primary text-primary-foreground" : "bg-muted hover:bg-muted/80"}`}>V3 · Avanzado (8m+)</button>
+      <div className="mb-4 flex flex-col gap-2">
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-medium text-muted-foreground">Fase de entrenamiento:</span>
+          <div className="flex gap-1">
+            <button onClick={() => setTrainingPhase("v1")} className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${trainingPhase === "v1" ? "bg-primary text-primary-foreground" : "bg-muted hover:bg-muted/80"}`}>V1 · Principiante (0–3m)</button>
+            <button onClick={() => setTrainingPhase("v2")} className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${trainingPhase === "v2" ? "bg-primary text-primary-foreground" : "bg-muted hover:bg-muted/80"}`}>V2 · Intermedio (3–8m)</button>
+            <button onClick={() => setTrainingPhase("v3")} className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${trainingPhase === "v3" ? "bg-primary text-primary-foreground" : "bg-muted hover:bg-muted/80"}`}>V3 · Avanzado (8m+)</button>
+            <button onClick={() => setTrainingPhase("deload")} className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${trainingPhase === "deload" ? "bg-amber-500 text-white" : "bg-muted hover:bg-muted/80"}`}>💤 Deload</button>
+          </div>
         </div>
+        {trainingPhase === "v1" && v1TodayRoutine && (
+          <div className="rounded-lg bg-primary/5 border border-primary/20 px-3 py-2 text-xs">
+            <span className="font-medium text-primary">Hoy toca:</span> Full Body {v1TodayRoutine} (Semana {currentWeekNumber} — {isOddWeek ? "A-B-A" : "B-A-B"})
+          </div>
+        )}
+        {trainingPhase === "deload" && (
+          <div className="rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 text-xs text-amber-800">
+            💤 <span className="font-medium">Semana de Deload:</span> Volumen al 50%, peso al 60–70%. Mismos movimientos, menos carga. Recuperación activa del SNC.
+          </div>
+        )}
       </div>
 
       {showForm && (
