@@ -23,6 +23,7 @@ model User {
   messages      Message[]
   meetings      Meeting[] @relation("MeetingOrganizer")
   agentLogs     AgentLog[]
+  routines      Routine[]
 
   @@map("users")
 }
@@ -51,6 +52,8 @@ model Task {
   dependedBy    TaskDependency[] @relation("DependencyTarget")
 
   embedding     Unsupported("vector(1536)")?
+  topics        TaskTopic[]
+  routineSteps  RoutineStep[]
 
   @@index([userId, status])
   @@index([projectId])
@@ -156,6 +159,7 @@ model Meeting {
 
   tasks         Task[]
   summary       MeetingSummaryRecord?
+  topics        MeetingTopic[]
 
   @@index([organizerId, scheduledAt])
   @@map("meetings")
@@ -199,6 +203,7 @@ model Note {
   entityLinks   NoteEntityLink[]
 
   embedding     Unsupported("vector(1536)")?
+  topics        NoteTopic[]
 
   @@index([userId])
   @@map("notes")
@@ -250,4 +255,123 @@ model AgentLog {
   @@index([userId, createdAt])
   @@index([agent, createdAt])
   @@map("agent_logs")
+}
+
+// ─── Topics (Second Brain Themes) ─────────────────────────────────
+
+model Topic {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  slug      String   @unique
+  color     String?
+  icon      String?
+  createdAt DateTime @default(now())
+
+  notes     NoteTopic[]
+  tasks     TaskTopic[]
+  meetings  MeetingTopic[]
+
+  @@map("topics")
+}
+
+model NoteTopic {
+  id      String @id @default(cuid())
+  noteId  String
+  topicId String
+
+  note  Note  @relation(fields: [noteId], references: [id], onDelete: Cascade)
+  topic Topic @relation(fields: [topicId], references: [id], onDelete: Cascade)
+
+  @@unique([noteId, topicId])
+  @@map("note_topics")
+}
+
+model TaskTopic {
+  id      String @id @default(cuid())
+  taskId  String
+  topicId String
+
+  task  Task  @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  topic Topic @relation(fields: [topicId], references: [id], onDelete: Cascade)
+
+  @@unique([taskId, topicId])
+  @@map("task_topics")
+}
+
+model MeetingTopic {
+  id        String @id @default(cuid())
+  meetingId String
+  topicId   String
+
+  meeting Meeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  topic   Topic   @relation(fields: [topicId], references: [id], onDelete: Cascade)
+
+  @@unique([meetingId, topicId])
+  @@map("meeting_topics")
+}
+
+// ─── Routines ─────────────────────────────────────────────────────
+
+model Routine {
+  id          String          @id @default(cuid())
+  name        String
+  category    RoutineCategory
+  description String?
+  isActive    Boolean         @default(true)
+  daysOfWeek  Json?
+  timeWindow  String?
+  userId      String
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  user        User            @relation(fields: [userId], references: [id])
+  steps       RoutineStep[]
+  executions  RoutineExecution[]
+
+  @@index([userId, isActive])
+  @@map("routines")
+}
+
+enum RoutineCategory {
+  MORNING
+  EVENING
+  WORKOUT
+  SKINCARE
+  CUSTOM
+}
+
+model RoutineStep {
+  id               String   @id @default(cuid())
+  routineId        String
+  order            Int
+  title            String
+  description      String?
+  estimatedMinutes Int?
+  linkedTaskId     String?
+
+  linkedTask       Task?    @relation(fields: [linkedTaskId], references: [id])
+  routine          Routine  @relation(fields: [routineId], references: [id], onDelete: Cascade)
+
+  @@index([routineId, order])
+  @@map("routine_steps")
+}
+
+model RoutineExecution {
+  id          String        @id @default(cuid())
+  routineId   String
+  date        DateTime
+  status      RoutineStatus @default(COMPLETED)
+  notes       String?
+  metadata    Json?
+
+  routine     Routine       @relation(fields: [routineId], references: [id], onDelete: Cascade)
+
+  @@index([routineId, date])
+  @@map("routine_executions")
+}
+
+enum RoutineStatus {
+  COMPLETED
+  PARTIAL
+  SKIPPED
 }
